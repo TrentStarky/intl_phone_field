@@ -47,6 +47,8 @@ class IntlPhoneField extends StatefulWidget {
   /// But, if `disableLengthCheck` is set to `true`, your validator will have to check phone number length itself.
   final FutureOr<String?> Function(PhoneNumber?)? validator;
 
+  final String? Function(String?)? phoneValidator;
+
   /// {@macro flutter.widgets.editableText.keyboardType}
   final TextInputType keyboardType;
 
@@ -254,6 +256,7 @@ class IntlPhoneField extends StatefulWidget {
     this.dropdownTextStyle,
     this.onSubmitted,
     this.validator,
+    this.phoneValidator,
     this.onChanged,
     this.countries,
     this.onCountryChanged,
@@ -264,7 +267,7 @@ class IntlPhoneField extends StatefulWidget {
     this.enabled = true,
     this.keyboardAppearance,
     @Deprecated('Use searchFieldInputDecoration of PickerDialogStyle instead')
-        this.searchText = 'Search country',
+    this.searchText = 'Search country',
     this.dropdownIconPosition = IconPosition.leading,
     this.dropdownIcon = const Icon(Icons.arrow_drop_down),
     this.autofocus = false,
@@ -308,19 +311,25 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
     if (widget.initialCountryCode == null && number.startsWith('+')) {
       number = number.substring(1);
       // parse initial value
-      _selectedCountry = countries.firstWhere((country) => number.startsWith(country.fullCountryCode), orElse: () => _countryList.first);
+      _selectedCountry = countries.firstWhere(
+          (country) => number.startsWith(country.fullCountryCode),
+          orElse: () => _countryList.first);
 
       // remove country code from the initial number value
-      number = number.replaceFirst(RegExp("^${_selectedCountry.fullCountryCode}"), "");
+      number = number.replaceFirst(
+          RegExp("^${_selectedCountry.fullCountryCode}"), "");
     } else {
-      _selectedCountry =
-          _countryList.firstWhere((item) => item.code == (widget.initialCountryCode ?? 'US'), orElse: () => _countryList.first);
+      _selectedCountry = _countryList.firstWhere(
+          (item) => item.code == (widget.initialCountryCode ?? 'US'),
+          orElse: () => _countryList.first);
 
       // remove country code from the initial number value
-      if(number.startsWith('+')){
-        number = number.replaceFirst(RegExp("^\\+${_selectedCountry.fullCountryCode}"), "");
-      }else{
-        number = number.replaceFirst(RegExp("^${_selectedCountry.fullCountryCode}"), "");
+      if (number.startsWith('+')) {
+        number = number.replaceFirst(
+            RegExp("^\\+${_selectedCountry.fullCountryCode}"), "");
+      } else {
+        number = number.replaceFirst(
+            RegExp("^${_selectedCountry.fullCountryCode}"), "");
       }
     }
 
@@ -392,7 +401,8 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
         widget.onSaved?.call(
           PhoneNumber(
             countryISOCode: _selectedCountry.code,
-            countryCode: '+${_selectedCountry.dialCode}${_selectedCountry.regionCode}',
+            countryCode:
+                '+${_selectedCountry.dialCode}${_selectedCountry.regionCode}',
             number: value!,
           ),
         );
@@ -416,6 +426,14 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
                   value.length <= _selectedCountry.maxLength
               ? null
               : widget.invalidNumberMessage;
+        }
+
+        if (widget.phoneValidator != null) {
+          final validationError = widget.phoneValidator!(value);
+
+          if (validationError != null) {
+            return validationError!;
+          }
         }
 
         return validatorMessage;
