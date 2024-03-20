@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl_phone_field/country_picker_bottomsheet.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 
 import './countries.dart';
@@ -198,6 +199,11 @@ class IntlPhoneField extends StatefulWidget {
   /// Default value is `true`.
   final bool showCountryFlag;
 
+  /// Whether to show the country flag as an emoji or image
+  ///
+  /// Default value is `false`
+  final bool showFlagAsEmoji;
+
   /// Message to be displayed on autoValidate error
   ///
   /// Default value is `Invalid Mobile Number`.
@@ -231,6 +237,10 @@ class IntlPhoneField extends StatefulWidget {
   /// Optional set of styles to allow for customizing the country search
   /// & pick dialog
   final PickerDialogStyle? pickerDialogStyle;
+
+  /// Optional set of styles to allow for customizing the country search
+  /// & pick bottom sheet
+  final PickerBottomSheetStyle? pickerBottomSheetStyle;
 
   /// The margin of the country selector button.
   ///
@@ -274,6 +284,7 @@ class IntlPhoneField extends StatefulWidget {
     this.textInputAction,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
     this.showCountryFlag = true,
+    this.showFlagAsEmoji = false,
     this.cursorColor,
     this.disableLengthCheck = false,
     this.flagsButtonPadding = EdgeInsets.zero,
@@ -283,6 +294,7 @@ class IntlPhoneField extends StatefulWidget {
     this.cursorWidth = 2.0,
     this.showCursor = true,
     this.pickerDialogStyle,
+    this.pickerBottomSheetStyle,
     this.flagsButtonMargin = EdgeInsets.zero,
   }) : super(key: key);
 
@@ -354,16 +366,19 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
 
   Future<void> _changeCountry() async {
     filteredCountries = _countryList;
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      useRootNavigator: false,
+      isScrollControlled: true,
+      useSafeArea: true,
+      barrierColor: Theme.of(context).colorScheme.background,
       builder: (context) => StatefulBuilder(
-        builder: (ctx, setState) => CountryPickerDialog(
-          style: widget.pickerDialogStyle,
+        builder: (ctx, setState) => CountryPickerBottomSheet(
+          style: widget.pickerBottomSheetStyle,
           filteredCountries: filteredCountries,
           searchText: widget.searchText,
           countryList: _countryList,
           selectedCountry: _selectedCountry,
+          showFlagAsEmoji: true,
           onCountryChanged: (Country country) {
             _selectedCountry = country;
             widget.onCountryChanged?.call(country);
@@ -372,6 +387,25 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
         ),
       ),
     );
+
+    // await showDialog(
+    //   context: context,
+    //   useRootNavigator: false,
+    //   builder: (context) => StatefulBuilder(
+    //     builder: (ctx, setState) => CountryPickerDialog(
+    //       style: widget.pickerDialogStyle,
+    //       filteredCountries: filteredCountries,
+    //       searchText: widget.searchText,
+    //       countryList: _countryList,
+    //       selectedCountry: _selectedCountry,
+    //       onCountryChanged: (Country country) {
+    //         _selectedCountry = country;
+    //         widget.onCountryChanged?.call(country);
+    //         setState(() {});
+    //       },
+    //     ),
+    //   ),
+    // );
     if (this.mounted) setState(() {});
   }
 
@@ -462,25 +496,34 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                SizedBox(width: 8),
                 if (widget.enabled &&
                     widget.showDropdownIcon &&
                     widget.dropdownIconPosition == IconPosition.leading) ...[
                   widget.dropdownIcon,
                   SizedBox(width: 4),
                 ],
-                if (widget.showCountryFlag) ...[
+                if (widget.showCountryFlag && widget.showFlagAsEmoji) ...[
+                  Text(_selectedCountry.flag),
+                  SizedBox(width: 4),
+                ],
+                if (widget.showCountryFlag && !widget.showFlagAsEmoji) ...[
                   Image.asset(
                     'assets/flags/${_selectedCountry.code.toLowerCase()}.png',
                     package: 'intl_phone_field',
                     width: 32,
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: 4),
                 ],
-                FittedBox(
-                  child: Text(
-                    '+${_selectedCountry.dialCode}',
-                    style: widget.dropdownTextStyle,
-                  ),
+                if (widget.enabled &&
+                    widget.showDropdownIcon &&
+                    widget.dropdownIconPosition == IconPosition.center) ...[
+                  widget.dropdownIcon,
+                  SizedBox(width: 6),
+                ],
+                Text(
+                  '+${_selectedCountry.dialCode}',
+                  style: widget.dropdownTextStyle,
                 ),
                 if (widget.enabled &&
                     widget.showDropdownIcon &&
@@ -501,5 +544,6 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
 
 enum IconPosition {
   leading,
+  center,
   trailing,
 }
