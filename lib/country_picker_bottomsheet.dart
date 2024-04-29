@@ -120,7 +120,10 @@ class _CountryPickerBottomSheetState extends State<CountryPickerBottomSheet> {
                 itemBuilder: (ctx, index) => ListTile(
                   minLeadingWidth: 0,
                   leading: widget.showFlagAsEmoji
-                      ? Text(_filteredCountries[index].flag)
+                      ? Text(
+                          _filteredCountries[index].flag,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        )
                       : Image.asset(
                           'assets/flags/${_filteredCountries[index].code.toLowerCase()}.png',
                           package: 'intl_phone_field',
