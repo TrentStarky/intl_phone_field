@@ -249,6 +249,9 @@ class IntlPhoneField extends StatefulWidget {
   /// If unset, defaults to [EdgeInsets.zero].
   final EdgeInsets flagsButtonMargin;
 
+  /// Icon that appears at the end of the textbox
+  final Widget? suffixIcon;
+
   IntlPhoneField({
     Key? key,
     this.initialCountryCode,
@@ -296,6 +299,7 @@ class IntlPhoneField extends StatefulWidget {
     this.pickerDialogStyle,
     this.pickerBottomSheetStyle,
     this.flagsButtonMargin = EdgeInsets.zero,
+    this.suffixIcon,
   }) : super(key: key);
 
   @override
@@ -429,6 +433,7 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
       decoration: widget.decoration.copyWith(
         prefixIcon: _buildFlagsButton(),
         counterText: !widget.enabled ? '' : null,
+        suffixIcon: widget.suffixIcon,
       ),
       style: widget.style,
       onSaved: (value) {
